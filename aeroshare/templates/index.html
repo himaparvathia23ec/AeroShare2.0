@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AeroShare 2.0 Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+body {
+  background: radial-gradient(circle at top left, #111827, #0b1120 60%);
+  color: #e2e8f0;
+  font-family: "Poppins", sans-serif;
+  height: 100vh;
+  display: flex;
+}
+.glass {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.3);
+}
+.glow {
+  text-shadow: 0 0 10px #60a5fa, 0 0 20px #3b82f6;
+}
+button {
+  transition: all 0.3s ease;
+}
+button:hover {
+  transform: scale(1.05);
+}
+.sidebar {
+  width: 240px;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(15px);
+  padding: 2rem 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.sidebar a {
+  display: block;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  color: #cbd5e1;
+  margin-bottom: 0.5rem;
+  text-decoration: none;
+  transition: 0.3s;
+}
+.sidebar a:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+.active {
+  background: rgba(59, 130, 246, 0.3);
+  color: white;
+}
+.main {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+}
+.hidden {
+  display: none;
+}
+.card {
+  transition: transform 0.3s ease;
+}
+.card:hover {
+  transform: translateY(-4px);
+}
+</style>
+</head>
+
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <div>
+    <h1 class="text-3xl font-bold glow text-blue-400 mb-6 text-center">AeroShare 2.0</h1>
+    <a href="#" class="active" onclick="showSection('dashboard')">Dashboard</a>
+    <a href="#" onclick="showSection('activeTransfers')">Active Transfers</a>
+    <a href="#" onclick="showSection('connectedPeers')">Connected Peers</a>
+    <a href="#" onclick="showSection('dataTransferred')">Data Transferred</a>
+    <a href="#" onclick="showSection('completed')">Completed</a>
+    <a href="#" onclick="showSection('allPredictions')">All Predictions</a>
+  </div>
+  <footer class="text-xs text-center text-slate-500">© 2025 AeroShare</footer>
+</div>
+
+<!-- Main -->
+<div class="main">
+
+  <!-- Dashboard -->
+  <div id="dashboard" class="section">
+    <h2 class="text-2xl font-semibold mb-6 text-blue-300">Share Smarter. Anywhere.</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <!-- Send -->
+      <div class="glass p-8 text-center card">
+        <h3 class="text-xl font-semibold mb-4 text-sky-300">Send File</h3>
+        <input type="file" id="sendFile" class="block mx-auto mb-4">
+        <button onclick="sendFile()" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg">Send</button>
+        <p id="shareCode" class="mt-3 text-green-400"></p>
+      </div>
+      <!-- Receive -->
+      <div class="glass p-8 text-center card">
+        <h3 class="text-xl font-semibold mb-4 text-teal-300">Receive File</h3>
+        <input type="text" id="receiveCode" placeholder="Enter Share Code" class="px-3 py-2 w-56 rounded-lg bg-gray-800 text-white mb-3">
+        <button onclick="receiveFile()" class="bg-teal-500 hover:bg-teal-600 text-white px-6 py-2 rounded-lg">Receive</button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="glass p-5 card text-center">
+        <h3 class="text-lg text-slate-300">Active Transfers</h3>
+        <p id="activeCount" class="text-4xl font-bold text-blue-400 mt-2">0</p>
+      </div>
+      <div class="glass p-5 card text-center">
+        <h3 class="text-lg text-slate-300">Connected Peers</h3>
+        <p id="peerCount" class="text-4xl font-bold text-green-400 mt-2">0</p>
+      </div>
+      <div class="glass p-5 card text-center">
+        <h3 class="text-lg text-slate-300">Data Transferred</h3>
+        <p id="dataCount" class="text-4xl font-bold text-yellow-400 mt-2">0 MB</p>
+      </div>
+    </div>
+    <p id="status" class="text-center text-slate-400 mt-5"></p>
+  </div>
+
+  <!-- Active Transfers -->
+  <div id="activeTransfers" class="section hidden">
+    <h2 class="text-2xl text-blue-300 font-semibold mb-4">Active Transfers</h2>
+    <div id="activeList" class="space-y-3"></div>
+  </div>
+
+  <!-- Connected Peers -->
+  <div id="connectedPeers" class="section hidden">
+    <h2 class="text-2xl text-green-400 font-semibold mb-4">Connected Peers</h2>
+    <ul id="peerList" class="space-y-3"></ul>
+  </div>
+
+  <!-- Data Transferred -->
+  <div id="dataTransferred" class="section hidden">
+    <h2 class="text-2xl text-yellow-400 font-semibold mb-4">Data Transferred</h2>
+    <p class="text-slate-400">Tracks total data sent and received during this session.</p>
+  </div>
+
+  <!-- Completed Transfers -->
+  <div id="completed" class="section hidden">
+    <h2 class="text-2xl text-green-300 font-semibold mb-4">Completed Transfers</h2>
+    <ul id="completedList" class="space-y-3"></ul>
+  </div>
+
+  <!-- All Predictions -->
+  <div id="allPredictions" class="section hidden">
+    <h2 class="text-2xl text-purple-400 font-semibold mb-4">All Predictions</h2>
+    <p class="text-slate-400">AI-based predictions of transfer speeds, success rates, and peer quality (coming soon).</p>
+  </div>
+
+</div>
+
+<script>
+let activeTransfers = [];
+let completedTransfers = [];
+let peers = ["Peer-01", "Peer-02"];
+let totalData = 0;
+
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+async function sendFile() {
+  const fileInput = document.getElementById('sendFile');
+  if (!fileInput.files.length) {
+    alert("Please choose a file!");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('file', fileInput.files[0]);
+
+  const response = await fetch('/upload', { method: 'POST', body: formData });
+  const data = await response.json();
+
+  if (data.code) {
+    document.getElementById('shareCode').textContent = "Share Code: " + data.code;
+    document.getElementById('status').textContent = "Uploading...";
+
+    activeTransfers.push({ name: fileInput.files[0].name, progress: "100%" });
+    totalData += (fileInput.files[0].size / (1024 * 1024)).toFixed(2);
+    updateDashboard();
+
+    setTimeout(() => {
+      completedTransfers.push(fileInput.files[0].name);
+      activeTransfers.pop();
+      updateDashboard();
+      document.getElementById('status').textContent = "✅ File sent successfully!";
+    }, 2000);
+  }
+}
+
+async function receiveFile() {
+  const code = document.getElementById('receiveCode').value.trim();
+  if (!code) {
+    alert("Enter a share code!");
+    return;
+  }
+
+  const response = await fetch('/download', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code })
+  });
+  const data = await response.json();
+
+  if (data.filename) {
+    const link = document.createElement('a');
+    link.href = `/get_file/${data.filename}`;
+    link.download = data.filename;
+    link.click();
+
+    completedTransfers.push(data.filename);
+    totalData += 1; // simulate data count
+    updateDashboard();
+
+    document.getElementById('status').textContent = "✅ File received successfully!";
+  } else {
+    document.getElementById('status').textContent = "❌ Invalid code!";
+  }
+}
+
+function updateDashboard() {
+  document.getElementById('activeCount').textContent = activeTransfers.length;
+  document.getElementById('peerCount').textContent = peers.length;
+  document.getElementById('dataCount').textContent = totalData.toFixed(2) + " MB";
+
+  const activeList = document.getElementById('activeList');
+  activeList.innerHTML = activeTransfers.map(f => `
+    <div class="glass p-4 flex justify-between">
+      <span>${f.name}</span>
+      <span class="text-blue-400">${f.progress}</span>
+    </div>`).join('');
+
+  const peerList = document.getElementById('peerList');
+  peerList.innerHTML = peers.map(p => `
+    <li class="glass p-3 flex justify-between">
+      <span>${p}</span>
+      <span class="text-green-400">Connected</span>
+    </li>`).join('');
+
+  const completedList = document.getElementById('completedList');
+  completedList.innerHTML = completedTransfers.map(f => `
+    <li class="glass p-3 flex justify-between">
+      <span>${f}</span>
+      <span class="text-green-300">✔ Completed</span>
+    </li>`).join('');
+}
+
+setInterval(updateDashboard, 3000);
+</script>
+</body>
+</html>
